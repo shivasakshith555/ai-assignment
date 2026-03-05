@@ -1,0 +1,37 @@
+Q1. Architecture for Turing Test and CAPTCHA
+
+Turing Test Architecture:
+The Turing Test, proposed by Alan Turing, is used to determine whether a machine can behave like a human during a conversation.
+
+Components:
+
+* Human Judge: Evaluates the responses.
+* Human Participant: A real human answering the questions.
+* AI Agent: A computer program that generates responses.
+* Communication Interface: Medium through which questions and answers are exchanged.
+
+Working:
+
+1. The judge sends questions through the interface.
+2. Both the human participant and the AI agent reply.
+3. The judge analyzes the responses.
+4. If the judge cannot distinguish the AI from the human, the machine passes the Turing Test.
+
+CAPTCHA Architecture:
+CAPTCHA (Completely Automated Public Turing test to tell Computers and Humans Apart) is used to differentiate between humans and automated bots.
+
+Components:
+
+* CAPTCHA Generator: Creates random text or image challenges.
+* User Interface: Displays the CAPTCHA to the user.
+* Input Module: Allows the user to enter the solution.
+* Verification System: Checks whether the input is correct.
+
+Working:
+
+1. The system generates a CAPTCHA challenge.
+2. The challenge is displayed to the user.
+3. The user enters the text seen in the CAPTCHA.
+4. The system verifies the answer.
+5. If correct, access is granted; otherwise access is denied.
+
