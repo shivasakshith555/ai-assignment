@@ -1,0 +1,169 @@
+import heapq
+import random
+import time
+
+GRID_SIZE = 30
+OBSTACLE_DENSITY = 0.25
+DYNAMIC_OBS_PROB = 0.15
+
+# -------------------------------
+# Generate grid
+# -------------------------------
+def generate_grid():
+    grid = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+    
+    for i in range(GRID_SIZE):
+        for j in range(GRID_SIZE):
+            if random.random() < OBSTACLE_DENSITY:
+                grid[i][j] = 1
+    
+    return grid
+
+# -------------------------------
+# Heuristic
+# -------------------------------
+def heuristic(a, b):
+    return abs(a[0]-b[0]) + abs(a[1]-b[1])
+
+# -------------------------------
+# A* Algorithm (FIXED)
+# -------------------------------
+def astar(grid, start, goal):
+    pq = [(0, start)]
+    came_from = {}
+    g_cost = {start: 0}
+    visited = set()
+
+    directions = [(0,1),(1,0),(0,-1),(-1,0)]
+
+    while pq:
+        _, current = heapq.heappop(pq)
+
+        if current in visited:
+            continue
+        visited.add(current)
+
+        if current == goal:
+            path = []
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            path.append(start)
+            return path[::-1]
+
+        for dx, dy in directions:
+            nx, ny = current[0]+dx, current[1]+dy
+
+            if 0 <= nx < GRID_SIZE and 0 <= ny < GRID_SIZE:
+                if grid[nx][ny] == 1:
+                    continue
+
+                new_cost = g_cost[current] + 1
+
+                if (nx, ny) not in g_cost or new_cost < g_cost[(nx, ny)]:
+                    g_cost[(nx, ny)] = new_cost
+                    priority = new_cost + heuristic((nx, ny), goal)
+                    heapq.heappush(pq, (priority, (nx, ny)))
+                    came_from[(nx, ny)] = current
+
+    return None
+
+# -------------------------------
+# Add dynamic obstacles (FIXED)
+# -------------------------------
+def add_dynamic_obstacles(grid, start, goal):
+    for _ in range(3):
+        if random.random() < DYNAMIC_OBS_PROB:
+            x = random.randint(0, GRID_SIZE-1)
+            y = random.randint(0, GRID_SIZE-1)
+
+            # ❗ Do not block start or goal
+            if (x, y) != start and (x, y) != goal:
+                grid[x][y] = 1
+
+# -------------------------------
+# Print grid (smaller output)
+# -------------------------------
+def print_grid(grid, current):
+    for i in range(min(GRID_SIZE, 20)):   # limit output
+        for j in range(min(GRID_SIZE, 20)):
+            if (i, j) == current:
+                print("U", end=" ")
+            elif grid[i][j] == 1:
+                print("#", end=" ")
+            else:
+                print(".", end=" ")
+        print()
+    print("-"*40)
+
+# -------------------------------
+# Dynamic Navigation (FIXED)
+# -------------------------------
+def dynamic_navigation(grid, start, goal):
+    current = start
+    path_taken = [current]
+    steps = 0
+    replans = 0
+
+    start_time = time.time()
+
+    while current != goal:
+        path = astar(grid, current, goal)
+
+        if not path:
+            print("❌ No path found! Mission failed.")
+            return None
+
+        replans += 1
+
+        moved = False  # ✅ fix infinite loop
+
+        for step in path[1:]:
+            add_dynamic_obstacles(grid, start, goal)
+
+            # If blocked → break and replan
+            if grid[step[0]][step[1]] == 1:
+                print("⚠️ Path blocked! Replanning...")
+                break
+
+            current = step
+            path_taken.append(current)
+            steps += 1
+            moved = True
+
+            # print_grid(grid, current)  # optional (slow)
+
+            if current == goal:
+                break
+
+        # ❗ If couldn't move → avoid infinite loop
+        if not moved:
+            print("❌ Stuck due to obstacles!")
+            return None
+
+    end_time = time.time()
+
+    print("\n===== METRICS =====")
+    print("Steps:", steps)
+    print("Replans:", replans)
+    print("Time:", round(end_time - start_time, 3), "sec")
+    print("Path Length:", len(path_taken))
+
+    return path_taken
+
+# -------------------------------
+# MAIN
+# -------------------------------
+if __name__ == "__main__":
+    grid = generate_grid()
+
+    start = (0, 0)
+    goal = (GRID_SIZE-1, GRID_SIZE-1)
+
+    grid[start[0]][start[1]] = 0
+    grid[goal[0]][goal[1]] = 0
+
+    path = dynamic_navigation(grid, start, goal)
+
+    print("\nFinal Path:")
+    print(path)
